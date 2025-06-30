@@ -103,5 +103,5 @@ Backend hosted on Render
 
  Add file preview for uploads
 
-🙋‍♀️ Made with ❤️ by Shivangi Dubey
+🙋‍♀️ Made by Shivangi Dubey
 
