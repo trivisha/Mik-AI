@@ -7,6 +7,12 @@ function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [sessions, setSessions] = useState([]);
   const [loadingSession, setLoadingSession] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [typing, setTyping] = useState(false);
+
+
+ 
+  
 
   const [sessionId, setSessionId] = useState(() => {
     const existing = localStorage.getItem("chat-session");
@@ -19,29 +25,74 @@ function App() {
 
   const chatEndRef = useRef(null);
 
-  const sendMessage = async () => {
-    if (!message.trim()) return;
+ const sendMessage = async () => {
+  if (!message.trim()) return;
 
-    const userMsg = { sender: "user", text: message };
-    setChat([...chat, userMsg]);
-    setMessage("");
+  const userMsg = { sender: "user", text: message };
+  setChat((prev) => [...prev, userMsg]);
+  setMessage("");
 
-    const history = [...chat, userMsg]
-      .map((msg) => `${msg.sender === "user" ? "User" : "Assistant"}: ${msg.text}`)
-      .join("\n");
+  const history = [...chat, userMsg]
+    .map((msg) => `${msg.sender === "user" ? "User" : "Assistant"}: ${msg.text}`)
+    .join("\n");
 
-    const fullPrompt = `You are a helpful assistant.\n${history}\nUser: ${message}\nAssistant:`;
+  const fullPrompt = `You are a helpful assistant.\n${history}\nUser: ${message}\nAssistant:`;
 
-    const res = await fetch("http://localhost:5000/api/together/ask", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: fullPrompt, sessionId }),
-    });
+  setTyping(true); // ✅ Start Typing
+  setChat((prev) => [...prev, { sender: "bot", text: "🤖 Typing..." }]); // Show Typing msg
 
-    const data = await res.json();
-    const botMsg = { sender: "bot", text: data.reply };
-    setChat((prev) => [...prev, botMsg]);
-  };
+  const res = await fetch("http://localhost:5000/api/together/ask", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt: fullPrompt, sessionId }),
+  });
+
+  const data = await res.json();
+  setTyping(false); // ✅ Stop Typing
+
+  setChat((prev) => [
+    ...prev.slice(0, -1), // remove last Typing message
+    { sender: "bot", text: data.reply },
+  ]);
+};
+
+const handleFileUpload = async (file) => {
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const question = prompt("Ask something about this file:");
+  formData.append("question", question || "Summarize this file");
+  formData.append("sessionId", sessionId);
+
+  // ✅ Show uploaded message
+  setChat((prev) => [
+    ...prev,
+    { sender: "user", text: `📎 Uploaded: ${file.name}\n❓ ${question}` },
+    { sender: "bot", text: "🤖 Typing..." }, // show Typing...
+  ]);
+
+  setLoading(true);
+  setTyping(true);
+
+  const res = await fetch("http://localhost:5000/api/together/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  const data = await res.json();
+  setLoading(false);
+  setTyping(false);
+
+  setChat((prev) => [
+    ...prev.slice(0, -1), // remove "Typing..."
+    { sender: "bot", text: data.reply },
+  ]);
+};
+
+ 
+
 
   const fetchAllSessions = async () => {
     const res = await fetch("http://localhost:5000/api/together/sessions");
@@ -83,6 +134,13 @@ function App() {
         </button>
       </div>
 
+       {/* ⏳ Show loading message if true */}
+    {loading && (
+      <div style={{ textAlign: "center", color: "gray", marginBottom: "10px" }}>
+        ⏳ Processing file...
+      </div>
+    )}
+
       {/* 🗂️ Session History */}
       <div className="sidebar">
         <h4>🗂️ Previous Sessions</h4>
@@ -102,13 +160,24 @@ function App() {
         {chat.map((msg, i) => (
           <div key={i} className={`message ${msg.sender}`}>
             <div className="avatar">{msg.sender === "user" ? "👩‍💻" : "🤖"}</div>
-            <div className="bubble">{msg.text}</div>
+            <div className={`bubble ${msg.text === "🤖 Typing..." ? "typing" : ""}`}>
+  {msg.text}
+</div>
+
           </div>
         ))}
         <div ref={chatEndRef}></div>
       </div>
 
       {/* ✍️ Input */}
+
+      <input
+  type="file"
+  accept=".pdf,.txt,.docx"
+  onChange={(e) => handleFileUpload(e.target.files[0])}
+/>
+
+
       <div className="input-area">
         <input
           value={message}

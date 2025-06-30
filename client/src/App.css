@@ -185,3 +185,45 @@ button:hover {
   background: #007bff;
   color: white;
 }
+
+.app, .chat-box, .bubble, input, button {
+  transition: all 0.3s ease;
+}
+
+.message:hover .bubble {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 600px) {
+  .app {
+    padding: 10px;
+  }
+
+  .bubble {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  input, button {
+    font-size: 14px;
+  }
+
+  .sidebar {
+    font-size: 14px;
+  }
+}
+
+.bubble {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+.typing {
+  font-style: italic;
+  opacity: 0.8;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
