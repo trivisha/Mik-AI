@@ -41,7 +41,7 @@ function App() {
   setTyping(true); // ✅ Start Typing
   setChat((prev) => [...prev, { sender: "bot", text: "🤖 Typing..." }]); // Show Typing msg
 
-  const res = await fetch("http://localhost:5000/api/together/ask", {
+  const res = await fetch("https://mik-ai-server.onrender.com/api/together/ask", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prompt: fullPrompt, sessionId }),
@@ -76,7 +76,7 @@ const handleFileUpload = async (file) => {
   setLoading(true);
   setTyping(true);
 
-  const res = await fetch("http://localhost:5000/api/together/upload", {
+  const res = await fetch("https://mik-ai-server.onrender.com/api/together/upload", {
     method: "POST",
     body: formData,
   });
@@ -95,14 +95,14 @@ const handleFileUpload = async (file) => {
 
 
   const fetchAllSessions = async () => {
-    const res = await fetch("http://localhost:5000/api/together/sessions");
+    const res = await fetch("https://mik-ai-server.onrender.com/api/together/sessions");
     const data = await res.json();
     setSessions(data);
   };
 
   const loadSession = async (selectedId) => {
     setLoadingSession(true);
-    const res = await fetch(`http://localhost:5000/api/together/history/${selectedId}`);
+    const res = await fetch(`https://mik-ai-server.onrender.com/api/together/history/${selectedId}`);
     const data = await res.json();
     const loadedChat = data.map((msg) => ({
       sender: msg.sender,
